@@ -39,10 +39,26 @@ bool IntersectRay( inout HitInfo hit, Ray ray );
 vec3 Shade( Material mtl, vec3 position, vec3 normal, vec3 view )
 {
 	vec3 color = vec3(0,0,0);
-	for ( int i=0; i<NUM_LIGHTS; ++i ) {
+	for ( int i=0; i<NUM_LIGHTS; ++i ) 
+    {
 		// TO-DO: Check for shadows
 		// TO-DO: If not shadowed, perform shading using the Blinn model
 		color += mtl.k_d * lights[i].intensity;	// change this line
+        HitInfo hit;
+		vec3 omega = normalize(lights[i].position - position);
+		if (!IntersectRay(hit, Ray(position, omega))) 
+        {
+			float c = dot(omega, normal);
+			if (c > 0.0) 
+            {
+				vec3 clr = mtl.k_d * c;
+				vec3 h = normalize(view + omega);
+				float s = dot(h, normal);
+				if (s > 0.0)
+					clr += mtl.k_s * pow(s, mtl.n);
+				color += clr * lights[i].intensity;
+			}
+		}
 	}
 	return color;
 }
